@@ -8,8 +8,8 @@
 
 // アドレス
 static const intptr_t addr1 = -0x130; //猫缶
-static const intptr_t addr2 = 0x40; //xp
-static const intptr_t addr3 = 0x48; //np
+static const intptr_t addr2 = 0x40;   //xp
+static const intptr_t addr3 = 0x48;   //np
 
 static uintptr_t base = 0;
 
@@ -33,7 +33,13 @@ static inline uintptr_t addr(intptr_t offset) {
 // setvalue(offset, value)
 bool setvalue(intptr_t offset, int32_t value) {
     if (base == 0) return false;
-    *((int32_t *)addr(offset)) = value;
+    uintptr_t address = addr(offset);
+    *((int32_t *)address) = value;
+
+    // デバッグ用: 書き込み後に値を確認
+    int32_t v = *((int32_t *)address);
+    NSLog(@"setvalue: addr=%p value=%d", (void *)address, v);
+
     return true;
 }
 
@@ -43,6 +49,7 @@ bool setvalue(intptr_t offset, int32_t value) {
 @property UIButton *floatingButton;
 @property UIView *overlay;
 @property UIView *menu;
+@property CGRect menuFrame; // メニュー位置保持
 
 @property UISwitch *toggleA;
 @property UISwitch *toggleB;
@@ -109,7 +116,9 @@ bool setvalue(intptr_t offset, int32_t value) {
     self.overlay.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.7];
     [w addSubview:self.overlay];
 
-    self.menu = [[UIView alloc] initWithFrame:CGRectMake(60, 160, 250, 300)];
+    CGRect frame = self.menuFrame;
+    if (CGRectIsEmpty(frame)) frame = CGRectMake(60, 160, 250, 300);
+    self.menu = [[UIView alloc] initWithFrame:frame];
     self.menu.backgroundColor = UIColor.whiteColor;
     self.menu.layer.cornerRadius = 14;
 
@@ -124,26 +133,24 @@ bool setvalue(intptr_t offset, int32_t value) {
     UILabel *labelA = [[UILabel alloc] initWithFrame:CGRectMake(16, 60, 120, 24)];
     labelA.text = @"猫缶";
     self.toggleA = [[UISwitch alloc] initWithFrame:CGRectMake(170, 56, 0, 0)];
-    [self.toggleA addTarget:self action:@selector(toggleChanged:)
-           forControlEvents:UIControlEventValueChanged];
 
     UILabel *labelB = [[UILabel alloc] initWithFrame:CGRectMake(16, 110, 120, 24)];
     labelB.text = @"XP";
     self.toggleB = [[UISwitch alloc] initWithFrame:CGRectMake(170, 106, 0, 0)];
-    [self.toggleB addTarget:self action:@selector(toggleChanged:)
-           forControlEvents:UIControlEventValueChanged];
 
     UILabel *labelC = [[UILabel alloc] initWithFrame:CGRectMake(16, 160, 120, 24)];
     labelC.text = @"NP";
     self.toggleC = [[UISwitch alloc] initWithFrame:CGRectMake(170, 156, 0, 0)];
-    [self.toggleC addTarget:self action:@selector(toggleChanged:)
-           forControlEvents:UIControlEventValueChanged];
+
+    [self.toggleA addTarget:self action:@selector(toggleChanged:) forControlEvents:UIControlEventValueChanged];
+    [self.toggleB addTarget:self action:@selector(toggleChanged:) forControlEvents:UIControlEventValueChanged];
+    [self.toggleC addTarget:self action:@selector(toggleChanged:) forControlEvents:UIControlEventValueChanged];
 
     UIButton *close = [UIButton buttonWithType:UIButtonTypeSystem];
     close.frame = CGRectMake(150, 250, 80, 30);
     [close setTitle:@"Close" forState:UIControlStateNormal];
     [close addTarget:self action:@selector(hideMenu)
-    forControlEvents:UIControlEventTouchUpInside];
+            forControlEvents:UIControlEventTouchUpInside];
 
     [self.menu addSubview:title];
     [self.menu addSubview:labelA];
@@ -158,6 +165,7 @@ bool setvalue(intptr_t offset, int32_t value) {
 }
 
 - (void)hideMenu {
+    self.menuFrame = self.menu.frame; // 閉じる前に位置を保持
     [self.timer invalidate];
     self.timer = nil;
     [self.overlay removeFromSuperview];
