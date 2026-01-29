@@ -11,6 +11,8 @@ static const intptr_t addr1 = -0x130; //猫缶
 static const intptr_t addr2 = 0x40; //xp
 static const intptr_t addr3 = 0x48; //np
 
+static uintptr_t base = 0;
+
 static uintptr_t getModuleBase(const char *moduleName) {
     uint32_t count = _dyld_image_count();
     for (uint32_t i = 0; i < count; i++) {
@@ -24,14 +26,14 @@ static uintptr_t getModuleBase(const char *moduleName) {
     return 0;
 }
 
+static inline uintptr_t addr(intptr_t offset) {
+    return base + offset;
+}
+
 // setvalue(offset, value)
 bool setvalue(intptr_t offset, int32_t value) {
-    const char *moduleName = "jp.co.ponos.battlecats"; // モジュール名
-    uintptr_t startAddress = getModuleBase(moduleName);
-    if (startAddress == 0) return false;
-
-    uintptr_t address = (uintptr_t)((intptr_t)startAddress + offset);  
-    *((int32_t *)address) = value;  
+    if (base == 0) return false;
+    *((int32_t *)addr(offset)) = value;
     return true;
 }
 
@@ -103,12 +105,10 @@ bool setvalue(intptr_t offset, int32_t value) {
     UIWindow *w = [self keyWindow];
     if (!w) return;
 
-    // 背景 黒70%
     self.overlay = [[UIView alloc] initWithFrame:w.bounds];
     self.overlay.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.7];
     [w addSubview:self.overlay];
 
-    // メニュー本体 250×300
     self.menu = [[UIView alloc] initWithFrame:CGRectMake(60, 160, 250, 300)];
     self.menu.backgroundColor = UIColor.whiteColor;
     self.menu.layer.cornerRadius = 14;
@@ -121,21 +121,18 @@ bool setvalue(intptr_t offset, int32_t value) {
     title.text = @"Mod Menu";
     title.font = [UIFont boldSystemFontOfSize:18];
 
-    // トグルA
     UILabel *labelA = [[UILabel alloc] initWithFrame:CGRectMake(16, 60, 120, 24)];
     labelA.text = @"A";
     self.toggleA = [[UISwitch alloc] initWithFrame:CGRectMake(170, 56, 0, 0)];
     [self.toggleA addTarget:self action:@selector(toggleChanged:)
            forControlEvents:UIControlEventValueChanged];
 
-    // トグルB
     UILabel *labelB = [[UILabel alloc] initWithFrame:CGRectMake(16, 110, 120, 24)];
     labelB.text = @"B";
     self.toggleB = [[UISwitch alloc] initWithFrame:CGRectMake(170, 106, 0, 0)];
     [self.toggleB addTarget:self action:@selector(toggleChanged:)
            forControlEvents:UIControlEventValueChanged];
 
-    // トグルC
     UILabel *labelC = [[UILabel alloc] initWithFrame:CGRectMake(16, 160, 120, 24)];
     labelC.text = @"C";
     self.toggleC = [[UISwitch alloc] initWithFrame:CGRectMake(170, 156, 0, 0)];
@@ -194,19 +191,16 @@ bool setvalue(intptr_t offset, int32_t value) {
 }
 
 - (void)applyPatch {
-    // トグルA
     if (self.toggleA.isOn) {
         setvalue(addr1, 58999);
         setvalue(addr1 + 4, 0);
     }
 
-    // トグルB
     if (self.toggleB.isOn) {
         setvalue(addr2, 999);
         setvalue(addr2 + 4, 0);
     }
 
-    // トグルC
     if (self.toggleC.isOn) {
         setvalue(addr3, 1);
         setvalue(addr3 + 4, 0);
@@ -219,6 +213,11 @@ bool setvalue(intptr_t offset, int32_t value) {
 
 __attribute__((constructor))
 static void entry() {
+    const char *moduleName = "jp.co.ponos.battlecats";
+    uintptr_t start = getModuleBase(moduleName);
+    if (start) {
+        base = start + 0x300; //32400のオフセット
+    }
     dispatch_async(dispatch_get_main_queue(), ^{
         [[ModMenuManager shared] showFloatingButton];
     });
