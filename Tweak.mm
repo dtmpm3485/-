@@ -122,19 +122,19 @@ bool setvalue(intptr_t offset, int32_t value) {
     title.font = [UIFont boldSystemFontOfSize:18];
 
     UILabel *labelA = [[UILabel alloc] initWithFrame:CGRectMake(16, 60, 120, 24)];
-    labelA.text = @"A";
+    labelA.text = @"猫缶";
     self.toggleA = [[UISwitch alloc] initWithFrame:CGRectMake(170, 56, 0, 0)];
     [self.toggleA addTarget:self action:@selector(toggleChanged:)
            forControlEvents:UIControlEventValueChanged];
 
     UILabel *labelB = [[UILabel alloc] initWithFrame:CGRectMake(16, 110, 120, 24)];
-    labelB.text = @"B";
+    labelB.text = @"XP";
     self.toggleB = [[UISwitch alloc] initWithFrame:CGRectMake(170, 106, 0, 0)];
     [self.toggleB addTarget:self action:@selector(toggleChanged:)
            forControlEvents:UIControlEventValueChanged];
 
     UILabel *labelC = [[UILabel alloc] initWithFrame:CGRectMake(16, 160, 120, 24)];
-    labelC.text = @"C";
+    labelC.text = @"NP";
     self.toggleC = [[UISwitch alloc] initWithFrame:CGRectMake(170, 156, 0, 0)];
     [self.toggleC addTarget:self action:@selector(toggleChanged:)
            forControlEvents:UIControlEventValueChanged];
@@ -216,7 +216,7 @@ static void entry() {
     const char *moduleName = "jp.co.ponos.battlecats";
     uintptr_t start = getModuleBase(moduleName);
     if (start) {
-        base = start + 0x300; //32400のオフセット
+        base = start + 0x1976D60;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
         [[ModMenuManager shared] showFloatingButton];
